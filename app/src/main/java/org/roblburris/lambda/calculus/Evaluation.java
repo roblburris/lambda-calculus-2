@@ -4,14 +4,12 @@ import com.google.common.collect.ImmutableList;
 import org.roblburris.lambda.calculus.ast.*;
 
 import java.util.List;
-import java.util.Optional;
 
 
 public final class Evaluation {
     private final static String LAMBDA = "λ";
 
-    private Evaluation() {
-    }
+    private Evaluation() {}
 
     public static Term evaluate(Term term) {
         return switch (term) {
