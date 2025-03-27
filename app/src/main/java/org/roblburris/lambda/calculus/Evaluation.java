@@ -2,8 +2,11 @@ package org.roblburris.lambda.calculus;
 
 import com.google.common.collect.ImmutableList;
 import org.roblburris.lambda.calculus.ast.*;
+import org.roblburris.lambda.calculus.util.Pair;
+import org.roblburris.lambda.calculus.util.Utils;
 
 import java.util.List;
+import java.util.function.Function;
 
 
 public final class Evaluation {
@@ -12,17 +15,10 @@ public final class Evaluation {
     private Evaluation() {}
 
     public static Term evaluate(Term term) {
-        return switch (term) {
-            case Application app -> switch (app.n()) {
-                case Abstraction v2 -> switch (app.m()) {
-                    case Abstraction abs -> betaReduce(v2, abs.m());
-                    default -> app;
-                };
-                default -> switch (app.m()) {
-                    case Abstraction v1 -> new Application(v1, evaluate(app.n()));
-                    default -> new Application(evaluate(app.m()), app.n());
-                };
-            };
+        return switch(term) {
+            case Application(Abstraction abs, Abstraction v2) -> betaReduce(v2, abs.m());
+            case Application(Abstraction v1, Term t2) -> new Application(v1, evaluate(t2));
+            case Application(Term t1, Term t2) -> new Application(evaluate(t1), t2);
             default -> term;
         };
     }
@@ -64,9 +60,6 @@ public final class Evaluation {
         }
     }
 
-    private record Pair<L, R>(L l, R r) {
-    }
-
     private static void printAbstraction(Context ctx, Abstraction abs) {
         Pair<Context, String> freshName = pickFreshName(ctx,
                 abs.name());
@@ -95,15 +88,8 @@ public final class Evaluation {
         if (hasName) {
             return pickFreshName(ctx, STR."\{x}'");
         } else {
-            List<String> newVars = prepend(ctx.vars(), x);
+            List<String> newVars = Utils.prepend(ctx.vars(), x);
             return new Pair<>(new Context(newVars), x);
         }
-    }
-
-    private static <T> List<T> prepend(List<T> l, T t) {
-        return ImmutableList.<T>builder()
-                .add(t)
-                .addAll(l)
-                .build();
     }
 }
